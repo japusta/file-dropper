@@ -1,23 +1,44 @@
-<!-- frontend/src/index.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>File Exchange Service</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <h1>File Exchange Service</h1>
+  <div class="container">
+    <h1 class="title">File Exchange Service</h1>
+    <form id="uploadForm" class="upload-form">
+      <label class="file-input-wrapper">
+        <input type="file" id="fileInput" class="file-input" required/>
+        <span class="file-label" id="fileLabel">Select file</span>
+      </label>
+      <button type="submit" class="btn upload-btn">Upload</button>
+    </form>
 
-  <form id="uploadForm">
-    <input type="file" id="fileInput" required />
-    <button type="submit">Upload</button>
-  </form>
+    <div class="progress-container" id="progressContainer" hidden>
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
 
-  <div id="status"></div>
-  <div id="link"></div>
-  <div id="stats"></div>
+    <div id="status" class="status"></div>
+    <div id="link"   class="link"></div>
+    <div id="stats"  class="stats"></div>
+  </div>
 
-  <script type="module" src="./script.js"></script>
+  <!-- модалка выбора действия -->
+  <div id="choiceModal" class="modal">
+    <div class="modal-content">
+      <button id="closeBtn" class="modal-close">&times;</button>
+      <p>Select option</p>
+      <button id="downloadBtn" class="modal-btn">Download file</button>
+      <button id="copyBtn"     class="modal-btn">Copy link</button>
+    </div>
+  </div>
+
+  <!-- Toast-уведомление -->
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="./script.ts"></script>
 </body>
 </html>

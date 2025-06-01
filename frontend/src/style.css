@@ -1,28 +1,156 @@
+:root {
+  --primary-color: #4a90e2;
+  --bg-color:      #f5f7fa;
+  --text-color:    #333;
+  --btn-hover:     #357ab8;
+}
+* { box-sizing: border-box; }
+
 body {
-    font-family: sans-serif;
-    max-width: 600px;
-    margin: auto;
-    padding: 2rem;
-  }
-  h1 {
-    text-align: center;
-  }
-  label,
-  form {
-    display: block;
-    margin-top: 1rem;
-  }
-  #status {
-    margin-top: 1rem;
-    font-weight: bold;
-  }
-  #link a {
-    display: block;
-    margin-top: 0.5rem;
-    word-break: break-all;
-  }
-  #stats {
-    margin-top: 2rem;
-    color: #555;
-  }
-  
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+.title { margin-bottom: 1.5rem; font-size: 1.75rem; color: var(--primary-color); }
+
+.upload-form {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* file input */
+.file-input-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  cursor: pointer;
+}
+.file-input {
+  position: absolute;
+  top: 0; left: 0;
+  font-size: 100px;
+  opacity: 0;
+  cursor: pointer;
+}
+.file-label {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: var(--primary-color);
+  color: #fff;
+  border-radius: 5px;
+  width: 200px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.file-label:hover { background-color: var(--btn-hover); }
+
+/* upload button */
+.btn.upload-btn {
+  padding: 0.6rem 1.2rem;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn.upload-btn:hover { background-color: var(--btn-hover); }
+
+.status { margin-top: 1rem; font-weight: bold; }
+.link a { color: var(--primary-color); text-decoration: none; }
+.link a:hover { text-decoration: underline; }
+.stats { margin-top: 1rem; font-size: 0.9rem; color: #666; }
+
+.progress-container {
+  width: 100%;
+  background: #eee;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 1rem;
+  height: 10px;
+}
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background-color: var(--primary-color);
+  transition: width 0.2s ease;
+}
+/* modal */
+.modal {
+  display: none;           /* скрыт по умолчанию */
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+}
+.modal.active {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  position: relative;
+  min-width: 280px;
+  max-width: 90%;
+}
+.modal-btn {
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.modal-btn:hover { background: var(--btn-hover); }
+.modal-close {
+  position: absolute;
+  top: 0.5rem; right: 0.5rem;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/* toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary-color);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 1001;
+}
+.toast.show {
+  opacity: 1;
+}
