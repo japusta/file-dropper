@@ -101,10 +101,15 @@ SUPABASE_BUCKET=test.doczilla.files
 ```Установка зависимостей```
 
 cd backend
+
 npm install
+
 npm run dev
 
 cd ../frontend
+
 npm install
+
 npm run build
+
 npm run serve
