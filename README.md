@@ -84,3 +84,27 @@ frontend/src/style.css
 
 frontend/src/script.ts
 — Все классы и интерфейсы: от IFileService до UploaderController, собираемые в DOMContentLoaded.
+
+
+```Установка и запуск```
+git clone https://github.com/japusta/file-dropper.git
+cd file-dropper
+
+Отредактируйте .env подставив реальные значения:
+
+PORT=3000
+STORAGE_TYPE=supabase
+SUPABASE_URL=https://emlltllefprdccuoyoie.supabase.co
+SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtbGx0bGxlZnByZGNjdW95b2llIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODU5NTk4NSwiZXhwIjoyMDY0MTcxOTg1fQ.kmYwwGet5M4py0gcijwtT0yCjiuj22sRp3DdTK_BiUQ
+SUPABASE_BUCKET=test.doczilla.files
+
+```Установка зависимостей```
+
+cd backend
+npm install
+npm run dev
+
+cd ../frontend
+npm install
+npm run build
+npm run serve
