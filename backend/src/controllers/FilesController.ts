@@ -1,5 +1,5 @@
 import { Express, Request, Response, NextFunction, Router } from 'express';
-import multer from 'multer';
+import multer, { MulterError } from 'multer';
 import { IStorage } from '../storage/IStorage';
 import { IAuthMiddleware } from '../auth/IAuthMiddleware';
 
@@ -14,11 +14,17 @@ import { IAuthMiddleware } from '../auth/IAuthMiddleware';
  */
 export class FilesController {
   private readonly router = Router();
-  private readonly upload = multer({ storage: multer.memoryStorage() });
+  private readonly upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      // ограничение 100 МБ на файл
+      fileSize: 100 * 1024 * 1024
+    }
+  });
 
   /**
-   * @param storage — экземпляр IStorage (например, SupabaseStorage)
-   * @param auth    — экземпляр IAuthMiddleware (например, ApiKeyAuth)
+   * @param storage — экземпляр IStorage (SupabaseStorage)
+   * @param auth    — экземпляр IAuthMiddleware (ApiKeyAuth)
    */
   constructor(
     private readonly storage: IStorage,
@@ -52,12 +58,12 @@ export class FilesController {
     next: NextFunction
   ): Promise<void> {
     if (!req.file) {
-      res.status(400).json({ error: 'No file' });
+      res.status(400).json({ error: 'No file provided' });
       return;
     }
 
     try {
-      // 1) ссохраняем файл, получаем ключ
+      // 1) сохраняем файл, получаем ключ
       const key = await this.storage.save(
         req.file.buffer,
         req.file.mimetype
@@ -66,8 +72,22 @@ export class FilesController {
       const url = await this.storage.generateLink(key);
       // 3) возвращаем JSON { url }
       res.json({ url });
-    } catch (err) {
-      next(err);
+    } catch (err: any) {
+      // если это ошибка Multer (например, файл слишком большой)
+      if (err instanceof MulterError) {
+        // 413 Payload Too Large
+        res.status(413).json({ error: err.message });
+        return;
+      }
+
+      const msg = err?.message || 'Internal Server Error';
+      if (msg.toLowerCase().includes('payload too large')) {
+        res.status(413).json({ error: msg });
+      } else if (msg.toLowerCase().includes('invalid part')) {
+        res.status(400).json({ error: msg });
+      } else {
+        res.status(500).json({ error: msg });
+      }
     }
   }
 
@@ -80,8 +100,9 @@ export class FilesController {
     try {
       const stats = await this.storage.getStats();
       res.json(stats);
-    } catch (err) {
-      next(err);
+    } catch (err: any) {
+      // отправляем понятную ошибку
+      res.status(500).json({ error: err.message || 'Could not fetch stats' });
     }
   }
 }

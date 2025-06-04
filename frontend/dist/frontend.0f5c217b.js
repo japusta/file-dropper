@@ -667,12 +667,47 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 }
 
 },{}],"8Ekvk":[function(require,module,exports,__globalThis) {
+var _axiosFileService = require("./services/AxiosFileService");
+var _progressView = require("./views/ProgressView");
+var _modalView = require("./views/ModalView");
+var _toastView = require("./views/ToastView");
+var _uploadFormView = require("./views/UploadFormView");
+var _uploaderController = require("./controllers/UploaderController");
+document.addEventListener('DOMContentLoaded', ()=>{
+    // 1) инициализация
+    const fileService = new (0, _axiosFileService.AxiosFileService)('http://localhost:3000/api/files');
+    // 2) инициализация progress-view
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressView = new (0, _progressView.ProgressView)(progressContainer, progressBar);
+    // 3) инициализация toast-view
+    const toastEl = document.getElementById('toast');
+    const toastView = new (0, _toastView.ToastView)(toastEl);
+    // 4) инициализация modal-view (callback для toast при копировании)
+    const modalEl = document.getElementById('choiceModal');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    const modalView = new (0, _modalView.ModalView)(modalEl, downloadBtn, copyBtn, closeBtn, (message)=>toastView.showMessage(message));
+    // 5) инициализация обёртку над формой
+    const formView = new (0, _uploadFormView.UploadFormView)('uploadForm', 'fileInput', 'fileLabel' // id <span> в label
+    );
+    // 6) DOM-элементы для статуса, ссылки и статистики
+    const statusEl = document.getElementById('status');
+    const linkEl = document.getElementById('link');
+    const statsEl = document.getElementById('stats');
+    new (0, _uploaderController.UploaderController)(fileService, progressView, modalView, toastView, formView, statusEl, linkEl, statsEl);
+});
+
+},{"./services/AxiosFileService":"h4FI4","./views/ProgressView":"5QVWW","./views/ModalView":"bWJrC","./views/ToastView":"1E8NU","./views/UploadFormView":"6MkGX","./controllers/UploaderController":"ewBrt"}],"h4FI4":[function(require,module,exports,__globalThis) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+/**
+ * AxiosFileService конкретная реализация IFileService через axios
+ */ parcelHelpers.export(exports, "AxiosFileService", ()=>AxiosFileService);
 var _axios = require("axios");
 var _axiosDefault = parcelHelpers.interopDefault(_axios);
-/**
- * AxiosFileService — конкретная реализация IFileService через axios
- */ class AxiosFileService {
+class AxiosFileService {
     constructor(baseUrl){
         this.baseUrl = baseUrl;
     }
@@ -684,193 +719,43 @@ var _axiosDefault = parcelHelpers.interopDefault(_axios);
                 'Content-Type': 'multipart/form-data'
             },
             onUploadProgress: (e)=>{
-                if (e.total) {
+                if (e.total !== undefined && e.loaded !== undefined) {
                     const pct = Math.round(e.loaded * 100 / e.total);
                     onProgress(pct);
                 }
             }
         };
-        const resp = await (0, _axiosDefault.default).post(`${this.baseUrl}/upload`, formData, config);
-        return resp.data.url;
+        try {
+            const resp = await (0, _axiosDefault.default).post(`${this.baseUrl}/upload`, formData, config);
+            return resp.data.url;
+        } catch (err) {
+            let errMsg = 'Upload failed';
+            if ((0, _axiosDefault.default).isAxiosError(err)) {
+                const axiosErr = err;
+                // если backend вернул JSON вида { error: "some message" }, отдаём именно его:
+                if (axiosErr.response && axiosErr.response.data && typeof axiosErr.response.data.error === 'string') errMsg = axiosErr.response.data.error;
+                else if (axiosErr.message) // иначе  стандартное сообщение axios, например "Request failed with status code 413"
+                errMsg = axiosErr.message;
+            } else if (err instanceof Error) errMsg = err.message;
+            // ошибка  текстом
+            throw new Error(errMsg);
+        }
     }
     async getStats() {
-        const resp = await (0, _axiosDefault.default).get(`${this.baseUrl}/stats`);
-        return resp.data.total;
-    }
-}
-/**
- * ProgressView — конкретная реализация через два элемента: контейнер и полоса
- */ class ProgressView {
-    constructor(container, bar){
-        this.container = container;
-        this.bar = bar;
-    }
-    show() {
-        this.container.hidden = false;
-        this.bar.style.width = '0%';
-    }
-    hide() {
-        this.container.hidden = true;
-    }
-    setPercent(pct) {
-        this.bar.style.width = `${pct}%`;
-    }
-}
-/**
- * ModalView — конкретная реализация, которая
- * манипулирует классом .active у modal-контейнера
- * и навешивает клики на downloadBtn, copyBtn, closeBtn.
- */ class ModalView {
-    constructor(modalEl, downloadBtn, copyBtn, closeBtn, toastFn// callback чтобы при копировании показать toast
-    ){
-        this.modalEl = modalEl;
-        this.downloadBtn = downloadBtn;
-        this.copyBtn = copyBtn;
-        this.closeBtn = closeBtn;
-        this.toastFn = toastFn;
-        this.closeBtn.addEventListener('click', ()=>this.hide());
-    }
-    show(url) {
-        this.modalEl.classList.add('active');
-        // при каждом новом показе навешиваем обработчики:
-        this.downloadBtn.onclick = ()=>{
-            window.open(url, '_blank');
-            this.hide();
-        };
-        this.copyBtn.onclick = ()=>{
-            navigator.clipboard.writeText(url).then(()=>this.toastFn("\u0421\u0441\u044B\u043B\u043A\u0430 \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u0430")).catch(()=>this.toastFn("\u041E\u0448\u0438\u0431\u043A\u0430 \u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F"));
-            this.hide();
-        };
-    }
-    hide() {
-        this.modalEl.classList.remove('active');
-        this.downloadBtn.onclick = null;
-        this.copyBtn.onclick = null;
-    }
-}
-/**
- * ToastView — показывает/прячет div#toast с анимацией opacity
- */ class ToastView {
-    constructor(toastEl){
-        this.toastEl = toastEl;
-    }
-    showMessage(msg) {
-        this.toastEl.textContent = msg;
-        this.toastEl.hidden = false;
-        this.toastEl.classList.add('show');
-        // через 2 секунды скрываем
-        setTimeout(()=>{
-            this.toastEl.classList.remove('show');
-            setTimeout(()=>this.toastEl.hidden = true, 300);
-        }, 2000);
-    }
-}
-/**
- * UploadFormView — класс-обёртка над DOM-формой, которая
- * 1) передаёт callback, когда пользователь нажал Submit
- * 2) автоматически обновляет текст лейбла (Select file) при смене файла
- */ class UploadFormView {
-    constructor(formId, fileInputId, fileLabelId){
-        this.form = document.getElementById(formId);
-        this.fileInput = document.getElementById(fileInputId);
-        this.fileLabel = document.getElementById(fileLabelId);
-        this.fileInput.addEventListener('change', ()=>{
-            this.fileLabel.textContent = this.fileInput.files?.[0]?.name || 'Select file';
-        });
-    }
-    /**
-   * навешивает callback на сабмит (пользователь нажал Upload)
-   * callback получает Event и сам может взять this.fileInput.files[0].
-   */ onSubmit(callback) {
-        this.form.addEventListener('submit', callback);
-    }
-    getSelectedFile() {
-        return this.fileInput.files?.[0] ?? null;
-    }
-}
-/**
- * 
- * сама бизнес-логика "пользователь нажал Upload => загрузить => показать результат"
- */ class UploaderController {
-    constructor(fileService, progressView, modalView, toastView, formView, statusEl, linkEl, statsEl){
-        this.fileService = fileService;
-        this.progressView = progressView;
-        this.modalView = modalView;
-        this.toastView = toastView;
-        this.formView = formView;
-        this.statusEl = statusEl;
-        this.linkEl = linkEl;
-        this.statsEl = statsEl;
-        // навешиваем обработчик сабмита
-        this.formView.onSubmit((ev)=>void this.handleSubmit(ev));
-    }
-    async handleSubmit(evt) {
-        evt.preventDefault();
-        const file = this.formView.getSelectedFile();
-        if (!file) return;
-        // сброс UI
-        this.statusEl.textContent = "Uploading\u2026";
-        this.linkEl.textContent = '';
-        this.statsEl.textContent = '';
         try {
-            // запускаем показ progress-бара
-            this.progressView.show();
-            // Загружаем файл, обновляя progress через коллбэк
-            const url = await this.fileService.uploadFile(file, (pct)=>{
-                this.progressView.setPercent(pct);
-            });
-            // cкрываем progress-бар
-            this.progressView.hide();
-            this.statusEl.textContent = 'Uploaded!';
-            // формируем ссылку в DOM
-            const a = document.createElement('a');
-            a.href = url;
-            a.textContent = 'Download file';
-            a.style.cursor = 'pointer';
-            this.linkEl.innerHTML = '';
-            this.linkEl.appendChild(a);
-            // При клике — открываем modalView
-            a.addEventListener('click', (e)=>{
-                e.preventDefault();
-                this.modalView.show(url);
-            });
-            // получаем статистику и выводим
-            const total = await this.fileService.getStats();
-            this.statsEl.textContent = `Total quantity files: ${total}`;
+            const resp = await (0, _axiosDefault.default).get(`${this.baseUrl}/stats`);
+            return resp.data.total;
         } catch (err) {
-            this.statusEl.textContent = 'Error';
-            console.error(err);
-            this.progressView.hide();
-            this.toastView.showMessage('Error loading');
+            let errMsg = 'Stats failed';
+            if ((0, _axiosDefault.default).isAxiosError(err)) {
+                const axiosErr = err;
+                if (axiosErr.response && axiosErr.response.data && typeof axiosErr.response.data.error === 'string') errMsg = axiosErr.response.data.error;
+                else if (axiosErr.message) errMsg = axiosErr.message;
+            } else if (err instanceof Error) errMsg = err.message;
+            throw new Error(errMsg);
         }
     }
 }
-document.addEventListener('DOMContentLoaded', ()=>{
-    // 1) инициализация конкретной реализации «сервиса файлов»
-    const fileService = new AxiosFileService('http://localhost:3000/api/files');
-    // 2) инициализация реализации progress-view
-    const progressContainer = document.getElementById('progressContainer');
-    const progressBar = document.getElementById('progressBar');
-    const progressView = new ProgressView(progressContainer, progressBar);
-    // 3) инициализация toast-view
-    const toastEl = document.getElementById('toast');
-    const toastView = new ToastView(toastEl);
-    // 4) инициализация modal-view, передаём callback внутри (toast при копировании)
-    const modalEl = document.getElementById('choiceModal');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    const closeBtn = document.getElementById('closeBtn');
-    const modalView = new ModalView(modalEl, downloadBtn, copyBtn, closeBtn, (message)=>toastView.showMessage(message));
-    // 5) инициализация обёртки над формой
-    const formView = new UploadFormView('uploadForm', 'fileInput', 'fileLabel' // id <span> внутри
-    );
-    // 6) DOM-элементы для статус ссылки и статистики
-    const statusEl = document.getElementById('status');
-    const linkEl = document.getElementById('link');
-    const statsEl = document.getElementById('stats');
-    // 7) Создаём контроллер
-    new UploaderController(fileService, progressView, modalView, toastView, formView, statusEl, linkEl, statsEl);
-});
 
 },{"axios":"kooH4","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"kooH4":[function(require,module,exports,__globalThis) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -5678,6 +5563,183 @@ Object.entries(HttpStatusCode).forEach(([key, value])=>{
     HttpStatusCode[value] = key;
 });
 exports.default = HttpStatusCode;
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"5QVWW":[function(require,module,exports,__globalThis) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+/**
+ * ProgressView конкретная реализация через два элемента: контейнер и полоса
+ */ parcelHelpers.export(exports, "ProgressView", ()=>ProgressView);
+class ProgressView {
+    constructor(container, bar){
+        this.container = container;
+        this.bar = bar;
+    }
+    show() {
+        this.container.hidden = false;
+        this.bar.style.width = '0%';
+    }
+    hide() {
+        this.container.hidden = true;
+    }
+    setPercent(pct) {
+        this.bar.style.width = `${pct}%`;
+    }
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"bWJrC":[function(require,module,exports,__globalThis) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+/**
+ * ModalView конкретная реализация, которая
+ * манипулирует классом .active у modal-контейнера
+ * и навешивает клики на downloadBtn, copyBtn, closeBtn
+ */ parcelHelpers.export(exports, "ModalView", ()=>ModalView);
+class ModalView {
+    constructor(modalEl, downloadBtn, copyBtn, closeBtn, toastFn// callback, чтобы при копировании показать toast
+    ){
+        this.modalEl = modalEl;
+        this.downloadBtn = downloadBtn;
+        this.copyBtn = copyBtn;
+        this.closeBtn = closeBtn;
+        this.toastFn = toastFn;
+        this.closeBtn.addEventListener('click', ()=>this.hide());
+    }
+    show(url) {
+        this.modalEl.classList.add('active');
+        // навешиваем обработчики 
+        this.downloadBtn.onclick = ()=>{
+            window.open(url, '_blank');
+            this.hide();
+        };
+        this.copyBtn.onclick = ()=>{
+            navigator.clipboard.writeText(url).then(()=>this.toastFn("\u0421\u0441\u044B\u043B\u043A\u0430 \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u0430")).catch(()=>this.toastFn("\u041E\u0448\u0438\u0431\u043A\u0430 \u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F"));
+            this.hide();
+        };
+    }
+    hide() {
+        this.modalEl.classList.remove('active');
+        this.downloadBtn.onclick = null;
+        this.copyBtn.onclick = null;
+    }
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"1E8NU":[function(require,module,exports,__globalThis) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+/**
+ * ToastView показывает/прячет toast с анимацией opacity
+ */ parcelHelpers.export(exports, "ToastView", ()=>ToastView);
+class ToastView {
+    constructor(toastEl){
+        this.toastEl = toastEl;
+    }
+    showMessage(msg) {
+        this.toastEl.textContent = msg;
+        this.toastEl.hidden = false;
+        this.toastEl.classList.add('show');
+        // через 2 секунды скрываем
+        setTimeout(()=>{
+            this.toastEl.classList.remove('show');
+            setTimeout(()=>this.toastEl.hidden = true, 300);
+        }, 2000);
+    }
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"6MkGX":[function(require,module,exports,__globalThis) {
+/**
+ * UploadFormView класс-обёртка над DOM-формой, которая
+ * 1) передаёт callback, когда пользователь нажал Submit
+ * 2) автоматически обновляет текст лейбла (Select file) при смене файла
+ */ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "UploadFormView", ()=>UploadFormView);
+class UploadFormView {
+    constructor(formId, fileInputId, fileLabelId){
+        this.form = document.getElementById(formId);
+        this.fileInput = document.getElementById(fileInputId);
+        this.fileLabel = document.getElementById(fileLabelId);
+        this.fileInput.addEventListener('change', ()=>{
+            this.fileLabel.textContent = this.fileInput.files?.[0]?.name || 'Select file';
+        });
+    }
+    /**
+     * onSubmit навешивает callback на сабмит (пользователь нажал Upload)
+     * @param callback получает Event, сам может взять this.fileInput.files[0]
+     */ onSubmit(callback) {
+        this.form.addEventListener('submit', callback);
+    }
+    /**
+     * Возвращает текущий выбранный файл или null
+     */ getSelectedFile() {
+        return this.fileInput.files?.[0] ?? null;
+    }
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"ewBrt":[function(require,module,exports,__globalThis) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+/**
+ * UploaderController связывает все части вместе
+ * 1) при сабмите: показывает прогресс, вызывает fileService.uploadFile(...)
+ * 2) при успехе: скрывает прогресс, показывает ссылку, открывает модалку
+ * 3) при ошибке: скрывает прогресс, показывает ошибку, выводит toast
+ */ parcelHelpers.export(exports, "UploaderController", ()=>UploaderController);
+class UploaderController {
+    constructor(fileService, progressView, modalView, toastView, formView, statusEl, linkEl, statsEl){
+        this.fileService = fileService;
+        this.progressView = progressView;
+        this.modalView = modalView;
+        this.toastView = toastView;
+        this.formView = formView;
+        this.statusEl = statusEl;
+        this.linkEl = linkEl;
+        this.statsEl = statsEl;
+        // навешиваем обработчик сабмита
+        this.formView.onSubmit((ev)=>void this.handleSubmit(ev));
+    }
+    async handleSubmit(evt) {
+        evt.preventDefault();
+        const file = this.formView.getSelectedFile();
+        if (!file) return;
+        this.statusEl.textContent = 'Uploading...';
+        this.linkEl.textContent = '';
+        this.linkEl.style.color = '';
+        this.statsEl.textContent = '';
+        try {
+            this.progressView.show();
+            // запускаем upload и обновляем progress через колбэк
+            const url = await this.fileService.uploadFile(file, (pct)=>{
+                this.progressView.setPercent(pct);
+            });
+            this.progressView.hide();
+            this.statusEl.textContent = 'Uploaded!';
+            const a = document.createElement('a');
+            a.href = url;
+            a.textContent = 'Download file';
+            a.style.cursor = 'pointer';
+            this.linkEl.innerHTML = '';
+            this.linkEl.appendChild(a);
+            a.addEventListener('click', (e)=>{
+                e.preventDefault();
+                this.modalView.show(url);
+            });
+            const total = await this.fileService.getStats();
+            this.statsEl.textContent = `Total quantity files: ${total}`;
+        } catch (err) {
+            //при ошибке: скрываем progress, выводим читаемое сообщение
+            const message = err.message || 'Unknown error';
+            this.statusEl.textContent = `Upload failed: ${message}`;
+            // если нужно отдельно показать подчёркнутый текст
+            // this.linkEl.textContent = message;
+            this.linkEl.textContent = '';
+            this.linkEl.style.color = 'red';
+            this.progressView.hide();
+            this.toastView.showMessage(message);
+            console.error('Upload error:', err);
+        }
+    }
+}
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}]},["dU1Ce","8Ekvk"], "8Ekvk", "parcelRequire10c2", {})
 

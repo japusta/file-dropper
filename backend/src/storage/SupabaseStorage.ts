@@ -1,3 +1,5 @@
+// backend/src/storage/SupabaseStorage.ts
+
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { IStorage } from './IStorage';
 import { v4 as uuidv4 } from 'uuid';
@@ -8,14 +10,18 @@ import { v4 as uuidv4 } from 'uuid';
  * Переменные окружения которые должны быть в .env
  *   SUPABASE_URL    (например https://xyz.supabase.co)
  *   SUPABASE_KEY    (секретный ключ)
- *   SUPABASE_BUCKET (имя бакета напрример "files")
+ *   SUPABASE_BUCKET (имя бакета, например "files")
  */
 export class SupabaseStorage implements IStorage {
   private readonly client: SupabaseClient;
   private readonly bucket: string;
 
   constructor() {
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY || !process.env.SUPABASE_BUCKET) {
+    if (
+      !process.env.SUPABASE_URL ||
+      !process.env.SUPABASE_KEY ||
+      !process.env.SUPABASE_BUCKET
+    ) {
       throw new Error('Не заданы SUPABASE_URL, SUPABASE_KEY или SUPABASE_BUCKET в .env');
     }
 
@@ -33,6 +39,8 @@ export class SupabaseStorage implements IStorage {
       .upload(fileName, buffer, { contentType: mime });
 
     if (error) {
+      // Если ошибка (например, «Payload too large» или другая),
+      // выбрасываем её дальше, чтобы FilesController вернул код 500 и текст ошибки
       throw error;
     }
     return fileName;
@@ -67,7 +75,7 @@ export class SupabaseStorage implements IStorage {
     // вычислим timestamp (в мс) минимальной даты
     const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
 
-    // получим полный список объектов до 1000 отсортированных по created_at
+    // получим полный список объектов (максимум 1000) отсортированных по created_at
     const { data: objects, error } = await this.client.storage
       .from(this.bucket)
       .list('', {
@@ -93,7 +101,7 @@ export class SupabaseStorage implements IStorage {
           deletedCount++;
         }
       } else {
-        // поскольку список отсортирован «asc», дальше все даты будут "больше либо рано" cutoff
+        // поскольку список отсортирован «asc», дальше уже все даты будут > cutoff
         break;
       }
     }

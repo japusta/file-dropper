@@ -6,7 +6,7 @@ import { RequestHandler } from 'express';
 export interface IAuthMiddleware {
   /**
    * dозвращает Express-совместимый middleware
-   * (req, res, next) => { … }
+   * (req, res, next) => { ... }
    */
   readonly middleware: RequestHandler;
 }
