@@ -98,6 +98,17 @@ SUPABASE_URL=https://emlltllefprdccuoyoie.supabase.co
 SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtbGx0bGxlZnByZGNjdW95b2llIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODU5NTk4NSwiZXhwIjoyMDY0MTcxOTg1fQ.kmYwwGet5M4py0gcijwtT0yCjiuj22sRp3DdTK_BiUQ
 SUPABASE_BUCKET=test.doczilla.files
 
+```ПРИМЕР РАБОТЫ```
+
+![{15A01B23-E30A-441D-BAC7-2421A317F3AD}](https://github.com/user-attachments/assets/289b804d-79f6-432e-b2fd-b1db98423da5)
+
+![{7A90A408-E399-456F-A8F8-54B2666DF7D3}](https://github.com/user-attachments/assets/9c0990d1-0c22-4c35-9050-161be05ea45e)
+
+![{43658BAD-7FF2-4F03-BB7C-C465E05F2265}](https://github.com/user-attachments/assets/ff11ca6c-835c-41ad-9e2f-79f570483f9f)
+
+![{1D4ECFDC-BB0A-4E4F-9F7F-CBAB7FAE21C1}](https://github.com/user-attachments/assets/f5a17a8e-cb70-4eac-842e-1f9d4789bf73)
+
+
 ```Установка зависимостей```
 
 cd backend
