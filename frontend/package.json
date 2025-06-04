@@ -2,9 +2,9 @@
   "name": "frontend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "parcel public/index.html --port 8080",
-    "build": "parcel build public/index.html --dist-dir dist",
-    "serve": "serve -s dist -l 8080"
+    "dev": "parcel src/index.html --port 8080",
+    "build": "parcel build src/index.html --dist-dir dist",
+    "start": "serve -s dist -l 8080"
   },
   "keywords": [],
   "author": "",
