@@ -76,15 +76,6 @@ backend/src/App.ts
 backend/src/server.ts
 — Точка входа: создаёт и запускает App.
 
-frontend/src/index.html
-— Разметка формы загрузки, прогресс-бар, контейнер для статуса/ссылки/статистики, модальное окно и уведомление.
-
-frontend/src/style.css
-— Стили для контейнера, кнопок, прогресс-бара, модалки и toast’а.
-
-frontend/src/script.ts
-— Все классы и интерфейсы: от IFileService до UploaderController, собираемые в DOMContentLoaded.
-
 
 ```Установка и запуск```
 git clone https://github.com/japusta/file-dropper.git
