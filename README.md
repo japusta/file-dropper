@@ -102,6 +102,10 @@ SUPABASE_BUCKET=test.doczilla.files
 
 ![{1D4ECFDC-BB0A-4E4F-9F7F-CBAB7FAE21C1}](https://github.com/user-attachments/assets/f5a17a8e-cb70-4eac-842e-1f9d4789bf73)
 
+![{11765CCC-8273-4587-908F-DE3BD696AD26}](https://github.com/user-attachments/assets/abd50737-8d33-4132-af61-49248ecfe448)
+
+![{FE73A362-006C-45B0-AA24-858275FC5DB2}](https://github.com/user-attachments/assets/fe969159-37ea-44ed-bfce-fdd7b060d26f)
+
 
 ```Установка зависимостей```
 
